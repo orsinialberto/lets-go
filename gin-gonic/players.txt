@@ -1,0 +1,6 @@
+{"Id":"9eca4d71-e304-4ccc-a028-92baf78866c0","email":"pippo@example.com"}
+{"Id":"df58afe8-5d47-4fe6-b249-f4196ecca37b","email":"pluto@example.com"}
+{"Id":"9432c2b4-27fc-4512-9e3c-c62fb7c0377a","email":"paperino@example.com"}
+{"Id":"32ca3607-894d-41aa-9bf8-60027c530b35","email":"qui@example.com"}
+{"Id":"6ccc5c1c-42d7-4bf9-b5f4-8c069d8f939a","email":"quo@example.com"}
+{"Id":"da5213aa-0d37-47aa-89ca-2e14e267d888","email":"qua@example.com"}

@@ -54,6 +54,12 @@ func GetPlayer(c *gin.Context) {
 	c.IndentedJSON(http.StatusCreated, p)
 }
 
+func GetPlayers(c *gin.Context) {
+	fmt.Println("Searching players")
+	players := readPlayers()
+	c.IndentedJSON(http.StatusCreated, players)
+}
+
 func writePlayer(p string) {
 
 	file, err := os.OpenFile("players.txt", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
@@ -90,4 +96,27 @@ func readPlayer(pId string) string {
 	}
 
 	return ""
+}
+
+func readPlayers() []model.Player {
+	file, err := os.Open("players.txt")
+	if err != nil {
+		fmt.Println("Error:", err)
+		return nil
+	}
+	defer file.Close()
+
+	players := []model.Player{}
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := scanner.Text()
+		var p model.Player
+		err := json.Unmarshal([]byte(line), &p)
+		if err != nil {
+			fmt.Println("Error:", err)
+			return nil
+		}
+		players = append(players, p)
+	}
+	return players
 }

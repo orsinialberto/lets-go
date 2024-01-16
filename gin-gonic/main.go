@@ -10,6 +10,7 @@ func main() {
 
 	r.POST("/players", service.PostPlayer)
 	r.GET("/players/:id", service.GetPlayer)
+	r.GET("/players", service.GetPlayers)
 
 	r.Run("localhost:8080")
 }
