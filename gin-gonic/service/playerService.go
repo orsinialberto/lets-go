@@ -60,7 +60,7 @@ func GetPlayer(c *gin.Context) {
 		return
 	}
 
-	c.IndentedJSON(http.StatusCreated, p)
+	c.IndentedJSON(http.StatusOK, p)
 }
 
 func GetPlayers(c *gin.Context) {
@@ -73,7 +73,7 @@ func GetPlayers(c *gin.Context) {
 		return
 	}
 
-	c.IndentedJSON(http.StatusCreated, players)
+	c.IndentedJSON(http.StatusOK, players)
 }
 
 func writePlayer(s string) error {
@@ -94,6 +94,7 @@ func writePlayer(s string) error {
 }
 
 func readPlayer(pId string) (string, error) {
+	// todo mettere nome file in file di configurazione
 	file, err := os.Open("players.txt")
 	if err != nil {
 		fmt.Println("Error:", err)
@@ -117,6 +118,7 @@ func readPlayer(pId string) (string, error) {
 }
 
 func readPlayers() ([]model.Player, error) {
+	// todo mettere nome file in file di configurazione
 	file, err := os.Open("players.txt")
 	if err != nil {
 		fmt.Println("Error:", err)
