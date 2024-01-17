@@ -2,10 +2,12 @@ package main
 
 import (
 	"bytes"
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
+	"example.com/gin-gonic/model"
 	"github.com/go-playground/assert/v2"
 )
 
@@ -33,8 +35,40 @@ func TestGetPlayer(t *testing.T) {
 	router := setupRouter()
 
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/players/bfa72e5d-2640-4d35-99c4-65aeff5d5161", nil)
+	req, _ := http.NewRequest("POST", "/players", bytes.NewBufferString("{\"email\":\"unit-test-delete@example.com\"}"))
+
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusCreated, w.Code)
+
+	var p model.Player
+	err := json.Unmarshal(w.Body.Bytes(), &p)
+	assert.Equal(t, nil, err)
+
+	w = httptest.NewRecorder()
+	req, _ = http.NewRequest("GET", "/players/"+p.Id, nil)
 	router.ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusOK, w.Code)
+}
+
+func TestDeletePlayer(t *testing.T) {
+	router := setupRouter()
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("POST", "/players", bytes.NewBufferString("{\"email\":\"unit-test-delete@example.com\"}"))
+
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusCreated, w.Code)
+
+	var p model.Player
+	err := json.Unmarshal(w.Body.Bytes(), &p)
+	assert.Equal(t, nil, err)
+
+	w = httptest.NewRecorder()
+	req, _ = http.NewRequest("DELETE", "/players/"+p.Id, nil)
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusNoContent, w.Code)
 }

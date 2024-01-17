@@ -16,6 +16,7 @@ func setupRouter() *gin.Engine {
 	r.POST("/players", service.PostPlayer)
 	r.GET("/players/:id", service.GetPlayer)
 	r.GET("/players", service.GetPlayers)
+	r.DELETE("/players/:id", service.DeletePlayer)
 
 	return r
 }

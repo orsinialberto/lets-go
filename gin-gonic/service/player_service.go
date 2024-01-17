@@ -13,6 +13,10 @@ import (
 	"github.com/google/uuid"
 )
 
+var (
+	filename = "players.txt"
+)
+
 func PostPlayer(c *gin.Context) {
 	var p model.Player
 	err := c.BindJSON(&p)
@@ -32,7 +36,7 @@ func PostPlayer(c *gin.Context) {
 		return
 	}
 
-	if err := writePlayer(jsonP); err != nil {
+	if err := writePlayer(jsonP, filename); err != nil {
 		fmt.Println("Error:", err)
 		c.IndentedJSON(http.StatusBadRequest, "Error writing player")
 		return
@@ -76,9 +80,21 @@ func GetPlayers(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, players)
 }
 
-func writePlayer(s string) error {
-	// todo mettere nome file in file di configurazione
-	file, err := os.OpenFile("players.txt", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
+func DeletePlayer(c *gin.Context) {
+	id := c.Param("id")
+	fmt.Println("Delete player", id)
+
+	if err := deletePlayer(id); err != nil {
+		fmt.Println("Error:", err)
+		c.IndentedJSON(http.StatusBadRequest, "error deleting player")
+		return
+	}
+
+	c.IndentedJSON(http.StatusNoContent, "")
+}
+
+func writePlayer(s string, f string) error {
+	file, err := os.OpenFile(f, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
 	if err != nil {
 		fmt.Println("Error:", err)
 		return err
@@ -94,8 +110,7 @@ func writePlayer(s string) error {
 }
 
 func readPlayer(pId string) (string, error) {
-	// todo mettere nome file in file di configurazione
-	file, err := os.Open("players.txt")
+	file, err := os.Open(filename)
 	if err != nil {
 		fmt.Println("Error:", err)
 		return "", err
@@ -111,6 +126,7 @@ func readPlayer(pId string) (string, error) {
 	}
 
 	if err := scanner.Err(); err != nil {
+		fmt.Println("Error:", err)
 		return "", err
 	}
 
@@ -118,8 +134,7 @@ func readPlayer(pId string) (string, error) {
 }
 
 func readPlayers() ([]model.Player, error) {
-	// todo mettere nome file in file di configurazione
-	file, err := os.Open("players.txt")
+	file, err := os.Open(filename)
 	if err != nil {
 		fmt.Println("Error:", err)
 		return nil, err
@@ -139,4 +154,40 @@ func readPlayers() ([]model.Player, error) {
 	}
 
 	return players, nil
+}
+
+func deletePlayer(pId string) error {
+	file, err := os.OpenFile(filename, os.O_RDWR, 0666)
+	if err != nil {
+		fmt.Println("Error:", err)
+		return err
+	}
+
+	scanner := bufio.NewScanner(file)
+	fileTmp := filename + "tmp"
+
+	for scanner.Scan() {
+		line := scanner.Text()
+		if !strings.Contains(line, pId) {
+			writePlayer(line, fileTmp)
+		}
+	}
+
+	if err := scanner.Err(); err != nil {
+		fmt.Println("Error:", err)
+		return err
+	}
+
+	file.Close()
+
+	if err := os.Remove(filename); err != nil {
+		fmt.Println("Error:", err)
+		return err
+	}
+
+	if err := os.Rename(fileTmp, filename); err != nil {
+		fmt.Println("Error:", err)
+		return err
+	}
+	return nil
 }
