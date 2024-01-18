@@ -13,9 +13,7 @@ import (
 	"github.com/google/uuid"
 )
 
-var (
-	filename = "players.txt"
-)
+var Filename string
 
 func PostPlayer(c *gin.Context) {
 	var p model.Player
@@ -36,7 +34,7 @@ func PostPlayer(c *gin.Context) {
 		return
 	}
 
-	if err := writePlayer(jsonP, filename); err != nil {
+	if err := writePlayer(jsonP, Filename); err != nil {
 		fmt.Println("Error:", err)
 		c.IndentedJSON(http.StatusBadRequest, "Error writing player")
 		return
@@ -85,6 +83,18 @@ func DeletePlayer(c *gin.Context) {
 	c.IndentedJSON(http.StatusNoContent, "")
 }
 
+func DeletePlayers(c *gin.Context) {
+	fmt.Println("Delete players")
+
+	if err := os.Remove(Filename); err != nil {
+		fmt.Println("Error:", err)
+		c.IndentedJSON(http.StatusBadRequest, "internal server error")
+		return
+	}
+
+	c.IndentedJSON(http.StatusNoContent, "")
+}
+
 func writePlayer(s string, f string) error {
 	file, err := os.OpenFile(f, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
 	if err != nil {
@@ -103,7 +113,7 @@ func writePlayer(s string, f string) error {
 
 func readPlayer(pId string) (model.Player, error) {
 	var p model.Player
-	file, err := os.Open(filename)
+	file, err := os.Open(Filename)
 	if err != nil {
 		fmt.Println("Error:", err)
 		return p, err
@@ -131,7 +141,7 @@ func readPlayer(pId string) (model.Player, error) {
 }
 
 func readPlayers() ([]model.Player, error) {
-	file, err := os.Open(filename)
+	file, err := os.Open(Filename)
 	if err != nil {
 		fmt.Println("Error:", err)
 		return nil, err
@@ -154,21 +164,32 @@ func readPlayers() ([]model.Player, error) {
 }
 
 func deletePlayer(pId string) error {
-	file, err := os.OpenFile(filename, os.O_RDWR, 0666)
+	file, err := os.OpenFile(Filename, os.O_RDWR, 0666)
 	if err != nil {
 		fmt.Println("Error:", err)
 		return err
 	}
 
 	scanner := bufio.NewScanner(file)
-	fileTmp := filename + "tmp"
+	filenameTmp := Filename + ".tmp"
+
+	fileTmp, err := os.Create(filenameTmp)
+	if err != nil {
+		fmt.Println("Error:", err)
+		return err
+	}
 
 	for scanner.Scan() {
 		line := scanner.Text()
 		if !strings.Contains(line, pId) {
-			writePlayer(line, fileTmp)
+			if _, err := fileTmp.WriteString(line + "\n"); err != nil {
+				fmt.Println("Error:", err)
+				return err
+			}
 		}
 	}
+
+	fileTmp.Close()
 
 	if err := scanner.Err(); err != nil {
 		fmt.Println("Error:", err)
@@ -177,12 +198,12 @@ func deletePlayer(pId string) error {
 
 	file.Close()
 
-	if err := os.Remove(filename); err != nil {
+	if err := os.Remove(Filename); err != nil {
 		fmt.Println("Error:", err)
 		return err
 	}
 
-	if err := os.Rename(fileTmp, filename); err != nil {
+	if err := os.Rename(filenameTmp, Filename); err != nil {
 		fmt.Println("Error:", err)
 		return err
 	}

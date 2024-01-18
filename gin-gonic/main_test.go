@@ -2,27 +2,47 @@ package main
 
 import (
 	"bytes"
-	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 
-	"example.com/gin-gonic/model"
+	"github.com/gin-gonic/gin"
 	"github.com/go-playground/assert/v2"
 )
 
+var (
+	filename string = "players_test.txt"
+	playerId string = "a2730fd5-f905-48ee-ad2b-04d30e5c5596"
+	router   *gin.Engine
+)
+
+func setup(t *testing.T) func() {
+	router = setupRouter(filename)
+
+	file, _ := os.OpenFile(filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
+	file.WriteString("{\"id\":\"" + playerId + "\",\"email\":\"unit-test@example.com\"}\n")
+	file.Close()
+
+	return func() {
+		os.Remove(filename)
+	}
+}
+
 func TestPostPlayer(t *testing.T) {
-	router := setupRouter()
+	cleanup := setup(t)
+	defer cleanup()
 
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("POST", "/players", bytes.NewBufferString("{\"email\":\"unit-test@example.com\"}"))
+	req, _ := http.NewRequest("POST", "/players", bytes.NewBufferString("{\"email\":\"post-unit-test@example.com\"}"))
 	router.ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusCreated, w.Code)
 }
 
 func TestGetPlayers(t *testing.T) {
-	router := setupRouter()
+	cleanup := setup(t)
+	defer cleanup()
 
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("GET", "/players", nil)
@@ -32,42 +52,33 @@ func TestGetPlayers(t *testing.T) {
 }
 
 func TestGetPlayer(t *testing.T) {
-	router := setupRouter()
+	cleanup := setup(t)
+	defer cleanup()
 
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("POST", "/players", bytes.NewBufferString("{\"email\":\"unit-test-delete@example.com\"}"))
-
-	router.ServeHTTP(w, req)
-
-	assert.Equal(t, http.StatusCreated, w.Code)
-
-	var p model.Player
-	err := json.Unmarshal(w.Body.Bytes(), &p)
-	assert.Equal(t, nil, err)
-
-	w = httptest.NewRecorder()
-	req, _ = http.NewRequest("GET", "/players/"+p.Id, nil)
+	req, _ := http.NewRequest("GET", "/players/"+playerId, nil)
 	router.ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusOK, w.Code)
 }
 
 func TestDeletePlayer(t *testing.T) {
-	router := setupRouter()
+	cleanup := setup(t)
+	defer cleanup()
 
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("POST", "/players", bytes.NewBufferString("{\"email\":\"unit-test-delete@example.com\"}"))
-
+	req, _ := http.NewRequest("DELETE", "/players/"+playerId, nil)
 	router.ServeHTTP(w, req)
 
-	assert.Equal(t, http.StatusCreated, w.Code)
+	assert.Equal(t, http.StatusNoContent, w.Code)
+}
 
-	var p model.Player
-	err := json.Unmarshal(w.Body.Bytes(), &p)
-	assert.Equal(t, nil, err)
+func TestDeletePlayers(t *testing.T) {
+	cleanup := setup(t)
+	defer cleanup()
 
-	w = httptest.NewRecorder()
-	req, _ = http.NewRequest("DELETE", "/players/"+p.Id, nil)
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("DELETE", "/players", nil)
 	router.ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusNoContent, w.Code)
