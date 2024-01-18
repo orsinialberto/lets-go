@@ -49,18 +49,10 @@ func GetPlayer(c *gin.Context) {
 	id := c.Param("id")
 	fmt.Println("Search player", id)
 
-	var p model.Player
-
-	player, err := readPlayer(id)
+	p, err := readPlayer(id)
 	if err != nil {
 		fmt.Println("Player not found", id)
 		c.IndentedJSON(http.StatusNotFound, "player "+id+" not found")
-		return
-	}
-
-	if err := json.Unmarshal([]byte(player), &p); err != nil {
-		fmt.Println("Error:", err)
-		c.IndentedJSON(http.StatusBadRequest, "error unmarshalling player")
 		return
 	}
 
@@ -109,28 +101,33 @@ func writePlayer(s string, f string) error {
 	return nil
 }
 
-func readPlayer(pId string) (string, error) {
+func readPlayer(pId string) (model.Player, error) {
+	var p model.Player
 	file, err := os.Open(filename)
 	if err != nil {
 		fmt.Println("Error:", err)
-		return "", err
+		return p, err
 	}
 	defer file.Close()
 
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		line := scanner.Text()
-		if strings.Contains(line, pId) {
-			return line, nil
+		if err := json.Unmarshal([]byte(line), &p); err != nil {
+			fmt.Println("Error:", err)
+			return p, err
+		}
+		if p.Id == pId {
+			return p, nil
 		}
 	}
 
 	if err := scanner.Err(); err != nil {
 		fmt.Println("Error:", err)
-		return "", err
+		return p, err
 	}
 
-	return "", nil
+	return p, nil
 }
 
 func readPlayers() ([]model.Player, error) {
