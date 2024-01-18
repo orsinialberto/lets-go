@@ -164,39 +164,12 @@ func readPlayers() ([]model.Player, error) {
 }
 
 func deletePlayer(pId string) error {
-	file, err := os.OpenFile(Filename, os.O_RDWR, 0666)
+
+	filenameTmp, err := copyFileWithoutId(pId)
 	if err != nil {
 		fmt.Println("Error:", err)
 		return err
 	}
-
-	scanner := bufio.NewScanner(file)
-	filenameTmp := Filename + ".tmp"
-
-	fileTmp, err := os.Create(filenameTmp)
-	if err != nil {
-		fmt.Println("Error:", err)
-		return err
-	}
-
-	for scanner.Scan() {
-		line := scanner.Text()
-		if !strings.Contains(line, pId) {
-			if _, err := fileTmp.WriteString(line + "\n"); err != nil {
-				fmt.Println("Error:", err)
-				return err
-			}
-		}
-	}
-
-	fileTmp.Close()
-
-	if err := scanner.Err(); err != nil {
-		fmt.Println("Error:", err)
-		return err
-	}
-
-	file.Close()
 
 	if err := os.Remove(Filename); err != nil {
 		fmt.Println("Error:", err)
@@ -208,4 +181,42 @@ func deletePlayer(pId string) error {
 		return err
 	}
 	return nil
+}
+
+func copyFileWithoutId(pId string) (string, error) {
+	file, err := os.OpenFile(Filename, os.O_RDWR, 0666)
+	if err != nil {
+		fmt.Println("Error:", err)
+		return "", err
+	}
+
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	filenameTmp := Filename + ".tmp"
+
+	fileTmp, err := os.Create(filenameTmp)
+	if err != nil {
+		fmt.Println("Error:", err)
+		return "", err
+	}
+
+	defer fileTmp.Close()
+
+	for scanner.Scan() {
+		line := scanner.Text()
+		if !strings.Contains(line, pId) {
+			if _, err := fileTmp.WriteString(line + "\n"); err != nil {
+				fmt.Println("Error:", err)
+				return "", err
+			}
+		}
+	}
+
+	if err := scanner.Err(); err != nil {
+		fmt.Println("Error:", err)
+		return "", err
+	}
+
+	return filenameTmp, nil
 }

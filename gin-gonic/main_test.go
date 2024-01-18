@@ -12,7 +12,7 @@ import (
 )
 
 var (
-	filename string = "players_test.txt"
+	filename string = "resource/players_test.txt"
 	playerId string = "a2730fd5-f905-48ee-ad2b-04d30e5c5596"
 	router   *gin.Engine
 )

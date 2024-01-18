@@ -5,12 +5,14 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+var fileStorage = "resource/players.txt"
+
 func main() {
-	r := setupRouter("players.txt")
+	r := setupRouter(fileStorage)
 	r.Run(":8080")
 }
 
-func setupRouter(filename string) *gin.Engine {
+func setupRouter(fileStorage string) *gin.Engine {
 	r := gin.Default()
 
 	r.POST("/players", service.PostPlayer)
@@ -19,7 +21,7 @@ func setupRouter(filename string) *gin.Engine {
 	r.DELETE("/players/:id", service.DeletePlayer)
 	r.DELETE("/players", service.DeletePlayers)
 
-	service.Filename = filename
+	service.Filename = fileStorage
 
 	return r
 }
