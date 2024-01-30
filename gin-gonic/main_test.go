@@ -12,13 +12,14 @@ import (
 )
 
 var (
-	filename string = "resource/players_test.txt"
-	playerId string = "a2730fd5-f905-48ee-ad2b-04d30e5c5596"
-	router   *gin.Engine
+	environment string = "test"
+	filename    string = "resource/players_test.txt"
+	playerId    string = "a2730fd5-f905-48ee-ad2b-04d30e5c5596"
+	router      *gin.Engine
 )
 
 func setup(t *testing.T) func() {
-	router = setupRouter(filename)
+	router = setupRouter(environment)
 
 	file, _ := os.OpenFile(filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
 	file.WriteString("{\"id\":\"" + playerId + "\",\"email\":\"unit-test@example.com\"}\n")

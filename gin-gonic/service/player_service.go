@@ -14,8 +14,6 @@ import (
 	"github.com/google/uuid"
 )
 
-var Filename string
-
 func PostPlayer(c *gin.Context) {
 	var p model.Player
 	err := c.BindJSON(&p)
@@ -88,7 +86,7 @@ func DeletePlayer(c *gin.Context) {
 func DeletePlayers(c *gin.Context) {
 	fmt.Println("Delete players")
 
-	if err := os.Remove(Filename); err != nil {
+	if err := os.Remove(model.GetConfig().Database.FileName); err != nil {
 		fmt.Println("Error:", err)
 		c.IndentedJSON(http.StatusBadRequest, "internal server error")
 		return
@@ -98,7 +96,7 @@ func DeletePlayers(c *gin.Context) {
 }
 
 func writePlayer(s string) error {
-	file, err := os.OpenFile(Filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
+	file, err := os.OpenFile(model.GetConfig().Database.FileName, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
 	if err != nil {
 		fmt.Println("Error:", err)
 		return err
@@ -115,7 +113,7 @@ func writePlayer(s string) error {
 
 func readPlayer(pId string) (model.Player, error) {
 	var p model.Player
-	file, err := os.Open(Filename)
+	file, err := os.Open(model.GetConfig().Database.FileName)
 	if err != nil {
 		fmt.Println("Error:", err)
 		return p, err
@@ -143,7 +141,7 @@ func readPlayer(pId string) (model.Player, error) {
 }
 
 func readPlayers() ([]model.Player, error) {
-	file, err := os.Open(Filename)
+	file, err := os.Open(model.GetConfig().Database.FileName)
 	if err != nil {
 		fmt.Println("Error:", err)
 		return nil, err
@@ -173,12 +171,12 @@ func deletePlayer(pId string) error {
 		return err
 	}
 
-	if err := os.Remove(Filename); err != nil {
+	if err := os.Remove(model.GetConfig().Database.FileName); err != nil {
 		fmt.Println("Error:", err)
 		return err
 	}
 
-	if err := os.Rename(filenameTmp, Filename); err != nil {
+	if err := os.Rename(filenameTmp, model.GetConfig().Database.FileName); err != nil {
 		fmt.Println("Error:", err)
 		return err
 	}
@@ -186,7 +184,7 @@ func deletePlayer(pId string) error {
 }
 
 func copyFileWithoutId(pId string) (string, error) {
-	file, err := os.OpenFile(Filename, os.O_RDWR, 0666)
+	file, err := os.OpenFile(model.GetConfig().Database.FileName, os.O_RDWR, 0666)
 	if err != nil {
 		fmt.Println("Error:", err)
 		return "", err
@@ -195,7 +193,7 @@ func copyFileWithoutId(pId string) (string, error) {
 	defer file.Close()
 
 	scanner := bufio.NewScanner(file)
-	filenameTmp := Filename + ".tmp"
+	filenameTmp := model.GetConfig().Database.FileName + ".tmp"
 
 	fileTmp, err := os.Create(filenameTmp)
 	if err != nil {
