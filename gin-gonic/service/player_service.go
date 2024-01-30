@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"example.com/gin-gonic/model"
 	"github.com/gin-gonic/gin"
@@ -25,6 +26,7 @@ func PostPlayer(c *gin.Context) {
 	}
 
 	p.Id = uuid.New().String()
+	p.CreatedAt = time.Now().UTC()
 	fmt.Println("Creating player:", p)
 
 	jsonP, err := p.ToJsonString()
@@ -34,7 +36,7 @@ func PostPlayer(c *gin.Context) {
 		return
 	}
 
-	if err := writePlayer(jsonP, Filename); err != nil {
+	if err := writePlayer(jsonP); err != nil {
 		fmt.Println("Error:", err)
 		c.IndentedJSON(http.StatusBadRequest, "Error writing player")
 		return
@@ -95,8 +97,8 @@ func DeletePlayers(c *gin.Context) {
 	c.IndentedJSON(http.StatusNoContent, "")
 }
 
-func writePlayer(s string, f string) error {
-	file, err := os.OpenFile(f, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
+func writePlayer(s string) error {
+	file, err := os.OpenFile(Filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
 	if err != nil {
 		fmt.Println("Error:", err)
 		return err

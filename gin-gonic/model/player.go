@@ -3,11 +3,13 @@ package model
 import (
 	"encoding/json"
 	"fmt"
+	"time"
 )
 
 type Player struct {
-	Id    string
-	Email string `json:"email"`
+	Id        string    `json:"id"`
+	Email     string    `json:"email"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 func (p Player) ToJsonString() (string, error) {
