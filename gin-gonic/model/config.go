@@ -18,12 +18,12 @@ type Database struct {
 var config *Config
 var once sync.Once
 
-func SetConfig(e string) {
+func SetConfig(e string) *Config {
 	once.Do(func() {
 
-		fmt.Println("Getting config")
+		fmt.Println("Setting config")
 
-		file, err := os.Open("resource/configuration/config_" + e + ".json")
+		file, err := os.Open("../configs/config_" + e + ".json")
 		if err != nil {
 			fmt.Println("Error opening configuration file:", err)
 			os.Exit(1)
@@ -39,6 +39,8 @@ func SetConfig(e string) {
 
 		config = &c
 	})
+
+	return config
 }
 
 func GetConfig() *Config {

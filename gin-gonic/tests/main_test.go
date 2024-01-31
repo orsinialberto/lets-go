@@ -7,21 +7,24 @@ import (
 	"os"
 	"testing"
 
+	"example.com/gin-gonic/api"
+	"example.com/gin-gonic/model"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/assert/v2"
 )
 
 var (
 	environment string = "test"
-	filename    string = "resource/players_test.txt"
 	playerId    string = "a2730fd5-f905-48ee-ad2b-04d30e5c5596"
 	router      *gin.Engine
 )
 
 func setup(t *testing.T) func() {
-	router = setupRouter(environment)
-
+	model.SetConfig(environment)
+	router = api.SetupRouter()
+	filename := model.GetConfig().Database.FileName
 	file, _ := os.OpenFile(filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
+
 	file.WriteString("{\"id\":\"" + playerId + "\",\"email\":\"unit-test@example.com\"}\n")
 	file.Close()
 

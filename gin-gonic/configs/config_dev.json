@@ -1,0 +1,5 @@
+{
+    "database": {
+        "fileName": "../data/dev/players.txt"
+    }
+}
