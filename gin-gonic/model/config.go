@@ -22,8 +22,12 @@ func SetConfig(e string) *Config {
 	once.Do(func() {
 
 		fmt.Println("Setting config")
+		filepath := "configs/config_" + e + ".json"
+		if e == "test" {
+			filepath = "../" + filepath
+		}
 
-		file, err := os.Open("../configs/config_" + e + ".json")
+		file, err := os.Open(filepath)
 		if err != nil {
 			fmt.Println("Error opening configuration file:", err)
 			os.Exit(1)
