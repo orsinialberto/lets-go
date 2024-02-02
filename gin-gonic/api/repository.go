@@ -5,11 +5,18 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"sort"
 	"strconv"
 	"strings"
 
 	"example.com/gin-gonic/model"
 )
+
+type People []model.Player
+
+func (p People) Len() int           { return len(p) }
+func (p People) Less(i, j int) bool { return p[i].Version < p[j].Version } // Sort by Version
+func (p People) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
 
 func SavePlayer(player string) error {
 	file, err := os.OpenFile(model.PlayersFilePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
@@ -56,7 +63,7 @@ func FindPlayerById(pId string) (model.Player, error) {
 	return p, nil
 }
 
-func ReadPlayers() ([]model.Player, error) {
+func ReadPlayersFromVersionLimit(from int, size int) ([]model.Player, error) {
 	file, err := os.OpenFile(model.PlayersFilePath, os.O_CREATE|os.O_RDONLY, 0666)
 	if err != nil {
 		fmt.Println("Error:", err)
@@ -64,8 +71,9 @@ func ReadPlayers() ([]model.Player, error) {
 	}
 	defer file.Close()
 
-	players := []model.Player{}
+	var players People
 	scanner := bufio.NewScanner(file)
+
 	for scanner.Scan() {
 		line := scanner.Text()
 		var p model.Player
@@ -76,7 +84,13 @@ func ReadPlayers() ([]model.Player, error) {
 		players = append(players, p)
 	}
 
-	return players, nil
+	sort.Sort(players)
+
+	if len(players) > size {
+		return players[from:size], nil
+	} else {
+		return players[from:], nil
+	}
 }
 
 func DeletePlayerById(pId string) error {

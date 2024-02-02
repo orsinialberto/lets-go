@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 
 	"example.com/gin-gonic/model"
@@ -64,7 +65,14 @@ func GetPlayer(c *gin.Context) {
 func GetPlayers(c *gin.Context) {
 	fmt.Println("Searching players")
 
-	players, err := ReadPlayers()
+	size, _ := strconv.Atoi(c.Query("size"))
+	if size == 0 {
+		size = 500
+	}
+
+	from, _ := strconv.Atoi(c.Query("from"))
+
+	players, err := ReadPlayersFromVersionLimit(from, size)
 	if err != nil {
 		fmt.Println("Error:", err)
 		c.IndentedJSON(http.StatusBadRequest, "error reading players")
