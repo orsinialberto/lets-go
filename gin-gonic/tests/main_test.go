@@ -116,3 +116,14 @@ func TestCheckPlayersVersion(t *testing.T) {
 	assert.Equal(t, nil, err)
 	assert.Equal(t, 3, player.Version)
 }
+
+func TestGetLastVersion(t *testing.T) {
+	cleanup := setup(t)
+	defer cleanup()
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/last-version", nil)
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+}

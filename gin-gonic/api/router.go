@@ -12,6 +12,7 @@ func SetupRouter() *gin.Engine {
 	router.GET("/players", GetPlayers)
 	router.DELETE("/players/:id", DeletePlayer)
 	router.DELETE("/players", DeletePlayers)
+	router.GET("/last-version", LastVersion)
 
 	return router
 }
