@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -14,22 +15,25 @@ import (
 )
 
 var (
-	environment string = "test"
-	playerId    string = "a2730fd5-f905-48ee-ad2b-04d30e5c5596"
-	router      *gin.Engine
+	playerId string = "a2730fd5-f905-48ee-ad2b-04d30e5c5596"
+	router   *gin.Engine
 )
 
 func setup(t *testing.T) func() {
-	model.SetConfig(environment)
+	model.InitConfig("../configs/config_test.json")
 	router = api.SetupRouter()
-	filename := model.GetConfig().Database.FileName
-	file, _ := os.OpenFile(filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
 
-	file.WriteString("{\"id\":\"" + playerId + "\",\"email\":\"unit-test@example.com\"}\n")
+	file, _ := os.OpenFile(model.PlayersFilePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
+	file.WriteString("{\"id\":\"" + playerId + "\",\"email\":\"unit-test@example.com\",\"version\":1}\n")
 	file.Close()
 
+	fileVersion, _ := os.OpenFile(model.VersionFilePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
+	fileVersion.WriteString("1")
+	fileVersion.Close()
+
 	return func() {
-		os.Remove(filename)
+		os.Remove(model.PlayersFilePath)
+		os.Remove(model.VersionFilePath)
 	}
 }
 
@@ -86,4 +90,29 @@ func TestDeletePlayers(t *testing.T) {
 	router.ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusNoContent, w.Code)
+}
+
+func TestCheckPlayersVersion(t *testing.T) {
+	cleanup := setup(t)
+	defer cleanup()
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("POST", "/players", bytes.NewBufferString("{\"email\":\"version-1-unit-test@example.com\"}"))
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusCreated, w.Code)
+
+	var player model.Player
+	err := json.NewDecoder(w.Body).Decode(&player)
+
+	assert.Equal(t, nil, err)
+	assert.Equal(t, 2, player.Version)
+
+	req, _ = http.NewRequest("POST", "/players", bytes.NewBufferString("{\"email\":\"version-2-unit-test@example.com\"}"))
+	router.ServeHTTP(w, req)
+
+	err = json.NewDecoder(w.Body).Decode(&player)
+
+	assert.Equal(t, nil, err)
+	assert.Equal(t, 3, player.Version)
 }

@@ -5,13 +5,13 @@ import (
 )
 
 func SetupRouter() *gin.Engine {
-	r := gin.Default()
+	router := gin.Default()
 
-	r.POST("/players", PostPlayer)
-	r.GET("/players/:id", GetPlayer)
-	r.GET("/players", GetPlayers)
-	r.DELETE("/players/:id", DeletePlayer)
-	r.DELETE("/players", DeletePlayers)
+	router.POST("/players", PostPlayer)
+	router.GET("/players/:id", GetPlayer)
+	router.GET("/players", GetPlayers)
+	router.DELETE("/players/:id", DeletePlayer)
+	router.DELETE("/players", DeletePlayers)
 
-	return r
+	return router
 }

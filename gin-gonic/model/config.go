@@ -12,22 +12,21 @@ type Config struct {
 }
 
 type Database struct {
-	FileName string `json:"fileName"`
+	Directory string `json:"directory"`
 }
 
-var config *Config
 var once sync.Once
 
-func SetConfig(e string) *Config {
+var config *Config
+var PlayersFilePath string
+var VersionFilePath string
+
+func InitConfig(confPath string) {
 	once.Do(func() {
 
-		fmt.Println("Setting config")
-		filepath := "configs/config_" + e + ".json"
-		if e == "test" {
-			filepath = "../" + filepath
-		}
+		fmt.Println("Reading config:", confPath)
 
-		file, err := os.Open(filepath)
+		file, err := os.Open(confPath)
 		if err != nil {
 			fmt.Println("Error opening configuration file:", err)
 			os.Exit(1)
@@ -35,16 +34,18 @@ func SetConfig(e string) *Config {
 		defer file.Close()
 
 		var c Config
-		d := json.NewDecoder(file)
-		if err := d.Decode(&c); err != nil {
+		decoder := json.NewDecoder(file)
+		if err := decoder.Decode(&c); err != nil {
 			fmt.Println("Error decoding configuration file:", err)
 			os.Exit(1)
 		}
 
 		config = &c
-	})
+		PlayersFilePath = config.Database.Directory + "players.txt"
+		VersionFilePath = config.Database.Directory + "version.txt"
 
-	return config
+		fmt.Println("Config loaded successfully")
+	})
 }
 
 func GetConfig() *Config {

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -25,6 +26,13 @@ func PostPlayer(c *gin.Context) {
 
 	p.Id = uuid.New().String()
 	p.CreatedAt = time.Now().UTC()
+	p.Version, err = getLastVersion()
+	if err != nil {
+		fmt.Println("Error:", err)
+		c.IndentedJSON(http.StatusBadRequest, "Invalid JSON player")
+		return
+	}
+
 	fmt.Println("Creating player:", p)
 
 	jsonP, err := p.ToJsonString()
@@ -86,7 +94,13 @@ func DeletePlayer(c *gin.Context) {
 func DeletePlayers(c *gin.Context) {
 	fmt.Println("Delete players")
 
-	if err := os.Remove(model.GetConfig().Database.FileName); err != nil {
+	if err := os.Remove(model.PlayersFilePath); err != nil {
+		fmt.Println("Error:", err)
+		c.IndentedJSON(http.StatusBadRequest, "internal server error")
+		return
+	}
+
+	if err := os.Remove(model.VersionFilePath); err != nil {
 		fmt.Println("Error:", err)
 		c.IndentedJSON(http.StatusBadRequest, "internal server error")
 		return
@@ -96,7 +110,7 @@ func DeletePlayers(c *gin.Context) {
 }
 
 func writePlayer(s string) error {
-	file, err := os.OpenFile(model.GetConfig().Database.FileName, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
+	file, err := os.OpenFile(model.PlayersFilePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
 	if err != nil {
 		fmt.Println("Error:", err)
 		return err
@@ -113,7 +127,7 @@ func writePlayer(s string) error {
 
 func readPlayer(pId string) (model.Player, error) {
 	var p model.Player
-	file, err := os.Open(model.GetConfig().Database.FileName)
+	file, err := os.Open(model.PlayersFilePath)
 	if err != nil {
 		fmt.Println("Error:", err)
 		return p, err
@@ -141,7 +155,7 @@ func readPlayer(pId string) (model.Player, error) {
 }
 
 func readPlayers() ([]model.Player, error) {
-	file, err := os.Open(model.GetConfig().Database.FileName)
+	file, err := os.Open(model.PlayersFilePath)
 	if err != nil {
 		fmt.Println("Error:", err)
 		return nil, err
@@ -171,12 +185,12 @@ func deletePlayer(pId string) error {
 		return err
 	}
 
-	if err := os.Remove(model.GetConfig().Database.FileName); err != nil {
+	if err := os.Remove(model.PlayersFilePath); err != nil {
 		fmt.Println("Error:", err)
 		return err
 	}
 
-	if err := os.Rename(filenameTmp, model.GetConfig().Database.FileName); err != nil {
+	if err := os.Rename(filenameTmp, model.PlayersFilePath); err != nil {
 		fmt.Println("Error:", err)
 		return err
 	}
@@ -184,7 +198,7 @@ func deletePlayer(pId string) error {
 }
 
 func copyFileWithoutId(pId string) (string, error) {
-	file, err := os.OpenFile(model.GetConfig().Database.FileName, os.O_RDWR, 0666)
+	file, err := os.OpenFile(model.PlayersFilePath, os.O_RDWR, 0666)
 	if err != nil {
 		fmt.Println("Error:", err)
 		return "", err
@@ -193,7 +207,7 @@ func copyFileWithoutId(pId string) (string, error) {
 	defer file.Close()
 
 	scanner := bufio.NewScanner(file)
-	filenameTmp := model.GetConfig().Database.FileName + ".tmp"
+	filenameTmp := model.PlayersFilePath + ".tmp"
 
 	fileTmp, err := os.Create(filenameTmp)
 	if err != nil {
@@ -219,4 +233,48 @@ func copyFileWithoutId(pId string) (string, error) {
 	}
 
 	return filenameTmp, nil
+}
+
+func getLastVersion() (int, error) {
+	file, err := os.OpenFile(model.VersionFilePath, os.O_CREATE|os.O_RDWR|os.O_SYNC, 0666)
+	if err != nil {
+		fmt.Println("Error:", err)
+		return 0, err
+	}
+	defer file.Close()
+
+	var version int
+	scanner := bufio.NewScanner(file)
+	if scanner.Scan() {
+		version, err = strconv.Atoi(scanner.Text())
+		if err != nil {
+			fmt.Println("Error:", err)
+			return 0, err
+		}
+		fmt.Println("Last version is:", version)
+	} else {
+		version = 0
+		fmt.Println("Empty file, set first version")
+	}
+
+	if err := scanner.Err(); err != nil {
+		fmt.Println("Error:", err)
+		return 0, err
+	}
+
+	version = version + 1
+	file1, err := os.OpenFile(model.VersionFilePath, os.O_WRONLY|os.O_TRUNC|os.O_SYNC, 0666)
+	if err != nil {
+		fmt.Println("Error:", err)
+		return 0, err
+	}
+
+	if _, err := file1.WriteString(strconv.Itoa(version) + "\n"); err != nil {
+		fmt.Println("Error:", err)
+		return 0, err
+	}
+
+	defer file1.Close()
+
+	return version, nil
 }

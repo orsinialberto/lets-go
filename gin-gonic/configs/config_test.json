@@ -1,5 +1,5 @@
 {
     "database": {
-        "fileName": "../data/test/players_test.txt"
+        "directory": "../data/test/"
     }
 }

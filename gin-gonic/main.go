@@ -6,7 +6,8 @@ import (
 )
 
 func main() {
-	model.SetConfig("dev")
-	r := api.SetupRouter()
-	r.Run("127.0.0.1:8080")
+	model.InitConfig("configs/config_dev.json")
+
+	router := api.SetupRouter()
+	router.Run("127.0.0.1:8080")
 }
