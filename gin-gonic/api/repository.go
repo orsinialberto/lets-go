@@ -86,11 +86,20 @@ func ReadPlayersFromVersionLimit(from int, size int) ([]model.Player, error) {
 
 	sort.Sort(players)
 
-	if len(players) > size {
-		return players[from:size], nil
-	} else {
-		return players[from:], nil
+	var result []model.Player
+	var count int
+	for _, p := range players {
+		if count >= size {
+			return result, nil
+		}
+
+		if p.Version >= from {
+			result = append(result, p)
+			count++
+		}
 	}
+
+	return result, nil
 }
 
 func DeletePlayerById(pId string) error {
