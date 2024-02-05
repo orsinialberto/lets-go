@@ -10,6 +10,7 @@ type Player struct {
 	Id        string    `json:"id"`
 	Email     string    `json:"email"`
 	CreatedAt time.Time `json:"created_at"`
+	Version   int       `json:"version"`
 }
 
 func (p Player) ToJsonString() (string, error) {
