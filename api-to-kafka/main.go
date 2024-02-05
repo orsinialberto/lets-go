@@ -62,7 +62,7 @@ func main() {
 }
 
 func scheduler() {
-	url := "http://127.0.0.1:8080/players?size=10&from=" + strconv.Itoa(last_version)
+	url := "http://127.0.0.1:8080/players?size=10&from=" + strconv.Itoa(last_version+1)
 	resp, err := http.Get(url)
 	if err != nil || resp.StatusCode != http.StatusOK {
 		fmt.Printf("Error: %v", err)
