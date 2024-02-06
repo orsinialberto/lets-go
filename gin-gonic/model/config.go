@@ -20,6 +20,7 @@ var once sync.Once
 var config *Config
 var PlayersFilePath string
 var VersionFilePath string
+var TeamFilePath string
 
 func InitConfig(confPath string) {
 	once.Do(func() {
@@ -43,6 +44,7 @@ func InitConfig(confPath string) {
 		config = &c
 		PlayersFilePath = config.Database.Directory + "players.txt"
 		VersionFilePath = config.Database.Directory + "version.txt"
+		TeamFilePath = config.Database.Directory + "team.txt"
 
 		fmt.Println("Config loaded successfully")
 	})
