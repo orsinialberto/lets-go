@@ -16,6 +16,7 @@ const (
 	VersionLookup = "data/version_lookup.txt"
 	playerUrl     = "http://127.0.0.1:8080/players?size=10&from="
 	kafkaBroker   = "localhost:9092"
+	topic         = "player"
 )
 
 var LastVersion int
@@ -74,7 +75,7 @@ func produce(p *model.Player) {
 
 	fmt.Println("Processing player:", value)
 	message := &sarama.ProducerMessage{
-		Topic: "api_2_kafka",
+		Topic: topic,
 		Value: sarama.StringEncoder(value),
 	}
 
