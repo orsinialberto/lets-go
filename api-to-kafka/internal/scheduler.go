@@ -13,10 +13,11 @@ import (
 )
 
 const (
-	VersionLookup = "data/version_lookup.txt"
-	playerUrl     = "http://127.0.0.1:8080/players?size=10&from="
-	kafkaBroker   = "localhost:9092"
-	topic         = "player"
+	VersionLookupPath     = "data/"
+	VersionLookupFilename = "version_lookup.txt"
+	playerUrl             = "http://127.0.0.1:8080/players?size=10&from="
+	kafkaBroker           = "localhost:9092"
+	topic                 = "player"
 )
 
 var LastVersion int
@@ -31,7 +32,7 @@ func Scheduler() {
 func consume() {
 	resp, err := http.Get(playerUrl + strconv.Itoa(LastVersion+1))
 	if err != nil || resp.StatusCode != http.StatusOK {
-		fmt.Printf("Error: %v", err)
+		fmt.Printf("Error: %v\n", err)
 		return
 	}
 	defer resp.Body.Close()
@@ -88,7 +89,7 @@ func produce(p *model.Player) {
 }
 
 func updateVersion(version int) error {
-	file, err := os.OpenFile(VersionLookup, os.O_WRONLY|os.O_TRUNC|os.O_SYNC, 0666)
+	file, err := os.OpenFile(VersionLookupPath+VersionLookupFilename, os.O_WRONLY|os.O_TRUNC|os.O_SYNC, 0666)
 	if err != nil {
 		fmt.Println("Error:", err)
 		return err
