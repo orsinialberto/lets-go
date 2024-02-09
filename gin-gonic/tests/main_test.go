@@ -3,9 +3,11 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"path/filepath"
 	"testing"
 
 	"example.com/gin-gonic/api"
@@ -21,6 +23,16 @@ var (
 
 func setup(t *testing.T) func() {
 	model.InitConfig("../configs/config_test.json")
+	if err := os.MkdirAll(filepath.Dir(model.PlayersFilePath), os.ModePerm); err != nil {
+		fmt.Println("error creating player path", err)
+		os.Exit(1)
+	}
+
+	if err := os.MkdirAll(filepath.Dir(model.VersionFilePath), os.ModePerm); err != nil {
+		fmt.Println("error creating version path", err)
+		os.Exit(1)
+	}
+
 	router = api.SetupRouter()
 
 	file, _ := os.OpenFile(model.PlayersFilePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
