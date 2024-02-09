@@ -52,14 +52,14 @@ func GetPlayer(c *gin.Context) {
 	id := c.Param("id")
 	fmt.Println("Search player", id)
 
-	p, err := FindPlayerById(id)
-	if err != nil {
+	player, err := FindPlayerById(id)
+	if err != nil || player.Id == "" {
 		fmt.Println("Player not found", id)
 		c.IndentedJSON(http.StatusNotFound, "player "+id+" not found")
 		return
 	}
 
-	c.IndentedJSON(http.StatusOK, p)
+	c.IndentedJSON(http.StatusOK, player)
 }
 
 func GetPlayers(c *gin.Context) {
@@ -76,6 +76,12 @@ func GetPlayers(c *gin.Context) {
 	if err != nil {
 		fmt.Println("Error:", err)
 		c.IndentedJSON(http.StatusBadRequest, "error reading players")
+		return
+	}
+
+	if players == nil {
+		fmt.Println("None player found")
+		c.IndentedJSON(http.StatusOK, []model.Player{})
 		return
 	}
 

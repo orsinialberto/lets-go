@@ -35,32 +35,32 @@ func SavePlayer(player string) error {
 }
 
 func FindPlayerById(pId string) (model.Player, error) {
-	var p model.Player
+	var player model.Player
 	file, err := os.OpenFile(model.PlayersFilePath, os.O_CREATE|os.O_RDONLY, 0666)
 	if err != nil {
 		fmt.Println("Error:", err)
-		return p, err
+		return player, err
 	}
 	defer file.Close()
 
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		line := scanner.Text()
-		if err := json.Unmarshal([]byte(line), &p); err != nil {
+		if err := json.Unmarshal([]byte(line), &player); err != nil {
 			fmt.Println("Error:", err)
-			return p, err
+			return player, err
 		}
-		if p.Id == pId {
-			return p, nil
+		if player.Id == pId {
+			return player, nil
 		}
 	}
 
 	if err := scanner.Err(); err != nil {
 		fmt.Println("Error:", err)
-		return p, err
+		return player, err
 	}
 
-	return p, nil
+	return player, nil
 }
 
 func ReadPlayersFromVersionLimit(from int, size int) ([]model.Player, error) {
